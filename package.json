@@ -1,0 +1,14 @@
+{
+  "name": "smart-transformer-monitoring",
+  "version": "1.0.0",
+  "description": "Smart Transformer Health Monitoring System - MERN Stack",
+  "main": "server/server.js",
+  "scripts": {
+    "server": "npm run dev --prefix server",
+    "client": "npm run dev --prefix client",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
