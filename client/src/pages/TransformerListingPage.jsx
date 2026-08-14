@@ -5,7 +5,7 @@ import AddTransformerModal from '../components/transformer/AddTransformerModal';
 import { getTransformers } from '../services/transformerService';
 import { useSocket } from '../context/SocketContext';
 import { useAuth } from '../context/AuthContext';
-import { Search, Plus, SlidersHorizontal, RefreshCw, AlertOctagon, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Search, Plus, SlidersHorizontal, RefreshCw } from 'lucide-react';
 
 const TransformerListingPage = () => {
   const { isAdmin } = useAuth();
@@ -108,11 +108,6 @@ const TransformerListingPage = () => {
     };
   }, [socket, sortBy]);
 
-  // Summary counts
-  const criticalCount = transformers.filter((t) => t.status === 'Critical' && !t.isStale).length;
-  const warningCount = transformers.filter((t) => t.status === 'Warning' && !t.isStale).length;
-  const healthyCount = transformers.filter((t) => t.status === 'Healthy' && !t.isStale).length;
-
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-16">
       <Navbar />
@@ -151,39 +146,6 @@ const TransformerListingPage = () => {
                 <Plus className="w-4 h-4" /> Add Transformer
               </button>
             )}
-          </div>
-        </div>
-
-        {/* Summary Counter Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          <div className="white-panel p-4 rounded-2xl border-l-4 border-l-red-500 flex items-center justify-between shadow-sm">
-            <div>
-              <span className="text-xs font-bold text-slate-500 block uppercase tracking-wider">Critical Faults</span>
-              <span className="text-2xl font-extrabold text-red-600 font-mono mt-0.5 block">{criticalCount}</span>
-            </div>
-            <div className="p-3 rounded-xl bg-red-50 text-red-600 border border-red-100">
-              <AlertOctagon className="w-6 h-6" />
-            </div>
-          </div>
-
-          <div className="white-panel p-4 rounded-2xl border-l-4 border-l-amber-500 flex items-center justify-between shadow-sm">
-            <div>
-              <span className="text-xs font-bold text-slate-500 block uppercase tracking-wider">Warning State</span>
-              <span className="text-2xl font-extrabold text-amber-600 font-mono mt-0.5 block">{warningCount}</span>
-            </div>
-            <div className="p-3 rounded-xl bg-amber-50 text-amber-600 border border-amber-100">
-              <AlertTriangle className="w-6 h-6" />
-            </div>
-          </div>
-
-          <div className="white-panel p-4 rounded-2xl border-l-4 border-l-emerald-500 flex items-center justify-between shadow-sm">
-            <div>
-              <span className="text-xs font-bold text-slate-500 block uppercase tracking-wider">Healthy Operations</span>
-              <span className="text-2xl font-extrabold text-emerald-600 font-mono mt-0.5 block">{healthyCount}</span>
-            </div>
-            <div className="p-3 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
-              <CheckCircle className="w-6 h-6" />
-            </div>
           </div>
         </div>
 

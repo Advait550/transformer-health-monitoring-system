@@ -20,6 +20,30 @@ const sensorReadingSchema = new mongoose.Schema(
       type: Number,
       required: [true, 'Temperature reading is required'],
     },
+    powerFactor: {
+      type: Number,
+      default: 0.95,
+    },
+    oilLevel: {
+      type: Number,
+      default: 85, // %
+    },
+    oilTemperature: {
+      type: Number,
+      default: 50, // °C
+    },
+    vibrations: {
+      type: Number,
+      default: 1.2, // mm/s
+    },
+    moisture: {
+      type: Number,
+      default: 15, // ppm
+    },
+    dga: {
+      type: Number,
+      default: 20, // Dissolved Gas Analysis in ppm
+    },
     timestamp: {
       type: Date,
       default: Date.now,

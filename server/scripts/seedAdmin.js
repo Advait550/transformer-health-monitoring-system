@@ -91,11 +91,11 @@ const seedData = async () => {
 
       // Initial sensor readings and health scores for each transformer
       const initialReadings = [
-        { voltage: 231.2, current: 48.5, temperature: 48.0 }, // Healthy (~98)
-        { voltage: 245.0, current: 62.0, temperature: 68.0 }, // Warning (~73)
-        { voltage: 278.0, current: 78.5, temperature: 88.0 }, // Critical (~35)
-        { voltage: 228.0, current: 51.0, temperature: 52.0 }, // Healthy (~98)
-        { voltage: 235.0, current: 55.0, temperature: 56.0 }, // Healthy (~93)
+        { voltage: 231.2, current: 48.5, temperature: 48.0, powerFactor: 0.96, oilLevel: 88, oilTemperature: 52, vibrations: 1.1, moisture: 12, dga: 18 }, // Healthy (~98)
+        { voltage: 245.0, current: 62.0, temperature: 68.0, powerFactor: 0.88, oilLevel: 72, oilTemperature: 65, vibrations: 2.4, moisture: 28, dga: 45 }, // Warning (~73)
+        { voltage: 278.0, current: 78.5, temperature: 88.0, powerFactor: 0.75, oilLevel: 45, oilTemperature: 85, vibrations: 4.8, moisture: 48, dga: 95 }, // Critical (~35)
+        { voltage: 228.0, current: 51.0, temperature: 52.0, powerFactor: 0.97, oilLevel: 90, oilTemperature: 50, vibrations: 0.9, moisture: 10, dga: 15 }, // Healthy (~98)
+        { voltage: 235.0, current: 55.0, temperature: 56.0, powerFactor: 0.94, oilLevel: 82, oilTemperature: 54, vibrations: 1.3, moisture: 16, dga: 22 }, // Healthy (~93)
       ];
 
       for (let i = 0; i < createdTx.length; i++) {
@@ -107,10 +107,23 @@ const seedData = async () => {
           voltage: r.voltage,
           current: r.current,
           temperature: r.temperature,
+          powerFactor: r.powerFactor,
+          oilLevel: r.oilLevel,
+          oilTemperature: r.oilTemperature,
+          vibrations: r.vibrations,
+          moisture: r.moisture,
+          dga: r.dga,
           timestamp: new Date(),
         });
 
-        const { score, status, modelVersion } = healthScoreService.calculate(r.voltage, r.current, r.temperature);
+        const { score, status, modelVersion } = healthScoreService.calculate(r.voltage, r.current, r.temperature, {
+          powerFactor: r.powerFactor,
+          oilLevel: r.oilLevel,
+          oilTemperature: r.oilTemperature,
+          vibrations: r.vibrations,
+          moisture: r.moisture,
+          dga: r.dga,
+        });
 
         await HealthScore.create({
           transformerId: tx._id,

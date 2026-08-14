@@ -25,17 +25,23 @@ const MapBoundsUpdater = ({ transformers }) => {
 };
 
 const KolhapurMap = ({ transformers }) => {
-  const getMarkerColor = (status, isStale) => {
-    if (isStale) return '#64748b'; // Slate
+  // Compute dot color directly from Health Score
+  const getMarkerColor = (healthScore, status) => {
+    if (healthScore !== null && healthScore !== undefined) {
+      if (healthScore < 60) return '#dc2626'; // Bright Red - Critical (<60)
+      if (healthScore < 80) return '#d97706'; // Warm Amber/Yellow - Warning (60-79)
+      return '#059669'; // Vibrant Emerald Green - Healthy (>=80)
+    }
+
     switch (status) {
       case 'Critical':
-        return '#dc2626'; // Red
+        return '#dc2626';
       case 'Warning':
-        return '#d97706'; // Amber / Yellow
+        return '#d97706';
       case 'Healthy':
-        return '#059669'; // Emerald
+        return '#059669';
       default:
-        return '#0072ce'; // Blue
+        return '#0072ce';
     }
   };
 
@@ -55,24 +61,32 @@ const KolhapurMap = ({ transformers }) => {
         <MapBoundsUpdater transformers={transformers} />
 
         {transformers.map((tx) => {
-          const color = getMarkerColor(tx.status, tx.isStale);
+          const mainColor = getMarkerColor(tx.healthScore, tx.status);
+
           return (
             <CircleMarker
-              key={tx._id}
+              key={`${tx._id}-${mainColor}-${tx.healthScore}`}
               center={[tx.latitude, tx.longitude]}
               radius={14}
               pathOptions={{
-                color: color,
-                fillColor: color,
-                fillOpacity: 0.85,
-                weight: 3,
+                color: mainColor,
+                fillColor: mainColor,
+                fillOpacity: 0.9,
+                weight: 2,
               }}
             >
               <Popup>
                 <div className="p-1 space-y-2 text-slate-800 min-w-[200px]">
                   <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2">
                     <h4 className="font-bold text-sm text-slate-900">{tx.name}</h4>
-                    <span className="font-mono text-xs font-bold text-[#005691]">
+                    <span
+                      className="font-mono text-xs font-bold px-2 py-0.5 rounded-full"
+                      style={{
+                        backgroundColor: `${mainColor}15`,
+                        color: mainColor,
+                        border: `1px solid ${mainColor}40`,
+                      }}
+                    >
                       Score: {tx.healthScore !== null ? tx.healthScore : '--'}
                     </span>
                   </div>
@@ -87,15 +101,15 @@ const KolhapurMap = ({ transformers }) => {
                     <div className="grid grid-cols-3 gap-1 py-1.5 px-2 rounded-xl bg-slate-50 border border-slate-100 text-[10px] text-center font-mono">
                       <div>
                         <span className="text-slate-400 block">Volt</span>
-                        <span className="text-[#0072CE] font-bold">{tx.latestReading.voltage}V</span>
+                        <span className="text-[#005691] font-bold">{tx.latestReading.voltage}V</span>
                       </div>
                       <div>
                         <span className="text-slate-400 block">Curr</span>
-                        <span className="text-amber-600 font-bold">{tx.latestReading.current}A</span>
+                        <span className="text-[#005691] font-bold">{tx.latestReading.current}A</span>
                       </div>
                       <div>
                         <span className="text-slate-400 block">Temp</span>
-                        <span className="text-rose-600 font-bold">{tx.latestReading.temperature}°C</span>
+                        <span className="text-[#005691] font-bold">{tx.latestReading.temperature}°C</span>
                       </div>
                     </div>
                   )}
@@ -129,10 +143,6 @@ const KolhapurMap = ({ transformers }) => {
         <div className="flex items-center gap-2">
           <span className="w-3 h-3 rounded-full bg-emerald-600" />
           <span className="text-slate-700 font-medium">Healthy (≥80)</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="w-3 h-3 rounded-full bg-slate-400" />
-          <span className="text-slate-600 font-medium">Stale / Offline</span>
         </div>
       </div>
     </div>

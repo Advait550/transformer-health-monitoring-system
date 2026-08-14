@@ -5,12 +5,23 @@ const healthScoreService = require('../services/healthScore/healthScoreService')
 const alertEngine = require('../services/alerts/alertEngine');
 const socketService = require('../services/realtime/socketService');
 
-// @desc    Ingest sensor reading from ESP32, calculate health score, trigger alerts & real-time update
+// @desc    Ingest multi-sensor reading from ESP32, calculate health score, trigger alerts & real-time update
 // @route   POST /api/sensor-data
 // @access  IoT API Key protected
 const ingestSensorData = async (req, res, next) => {
   try {
-    const { transformerId, voltage, current, temperature } = req.body;
+    const {
+      transformerId,
+      voltage,
+      current,
+      temperature,
+      powerFactor = 0.95,
+      oilLevel = 85,
+      oilTemperature = 50,
+      vibrations = 1.2,
+      moisture = 15,
+      dga = 20,
+    } = req.body;
 
     if (!transformerId || voltage === undefined || current === undefined || temperature === undefined) {
       return res.status(400).json({
@@ -27,12 +38,18 @@ const ingestSensorData = async (req, res, next) => {
       });
     }
 
-    // 1. Save Sensor Reading
+    // 1. Save Sensor Reading with all 9 parameters
     const sensorReading = await SensorReading.create({
       transformerId,
       voltage: Number(voltage),
       current: Number(current),
       temperature: Number(temperature),
+      powerFactor: Number(powerFactor),
+      oilLevel: Number(oilLevel),
+      oilTemperature: Number(oilTemperature),
+      vibrations: Number(vibrations),
+      moisture: Number(moisture),
+      dga: Number(dga),
       timestamp: new Date(),
     });
 
@@ -47,7 +64,15 @@ const ingestSensorData = async (req, res, next) => {
     const { score, status, modelVersion } = healthScoreService.calculate(
       Number(voltage),
       Number(current),
-      Number(temperature)
+      Number(temperature),
+      {
+        powerFactor: Number(powerFactor),
+        oilLevel: Number(oilLevel),
+        oilTemperature: Number(oilTemperature),
+        vibrations: Number(vibrations),
+        moisture: Number(moisture),
+        dga: Number(dga),
+      }
     );
 
     // 4. Save Health Score Document
@@ -64,6 +89,12 @@ const ingestSensorData = async (req, res, next) => {
       voltage: Number(voltage),
       current: Number(current),
       temperature: Number(temperature),
+      powerFactor: Number(powerFactor),
+      oilLevel: Number(oilLevel),
+      oilTemperature: Number(oilTemperature),
+      vibrations: Number(vibrations),
+      moisture: Number(moisture),
+      dga: Number(dga),
     });
 
     // 6. Socket.IO Real-time Emissions
@@ -74,6 +105,12 @@ const ingestSensorData = async (req, res, next) => {
       voltage: Number(voltage),
       current: Number(current),
       temperature: Number(temperature),
+      powerFactor: Number(powerFactor),
+      oilLevel: Number(oilLevel),
+      oilTemperature: Number(oilTemperature),
+      vibrations: Number(vibrations),
+      moisture: Number(moisture),
+      dga: Number(dga),
       healthScore: score,
       status,
       timestamp: sensorReading.timestamp,
@@ -118,8 +155,8 @@ const ingestSensorData = async (req, res, next) => {
         status,
         modelVersion,
         alertState: {
-          alertCreated: alertResult.alertCreated,
-          alertResolved: alertResult.alertResolved,
+          created: alertResult.alertCreated,
+          resolved: alertResult.alertResolved,
         },
       },
     });
@@ -128,32 +165,49 @@ const ingestSensorData = async (req, res, next) => {
   }
 };
 
-// @desc    Get sensor reading history for a transformer (paginated)
-// @route   GET /api/transformers/:id/readings
-// @access  Private (All roles)
-const getReadingsByTransformer = async (req, res, next) => {
+// @desc    Get latest sensor reading for a transformer
+// @route   GET /api/sensor-data/:transformerId/latest
+// @access  Protected
+const getLatestReading = async (req, res, next) => {
   try {
-    const page = parseInt(req.query.page, 10) || 1;
-    const limit = parseInt(req.query.limit, 10) || 20;
-    const startIndex = (page - 1) * limit;
+    const { transformerId } = req.params;
 
-    const total = await SensorReading.countDocuments({ transformerId: req.params.id });
-
-    const readings = await SensorReading.find({ transformerId: req.params.id })
+    const latestReading = await SensorReading.findOne({ transformerId })
       .sort({ timestamp: -1 })
-      .skip(startIndex)
-      .limit(limit)
-      .lean();
+      .exec();
 
-    res.json({
+    if (!latestReading) {
+      return res.status(404).json({
+        success: false,
+        message: 'No sensor readings found for this transformer',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: latestReading,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get historical sensor telemetry for a transformer
+// @route   GET /api/sensor-data/:transformerId/history?limit=50
+// @access  Protected
+const getReadingHistory = async (req, res, next) => {
+  try {
+    const { transformerId } = req.params;
+    const limit = parseInt(req.query.limit, 10) || 50;
+
+    const readings = await SensorReading.find({ transformerId })
+      .sort({ timestamp: -1 })
+      .limit(limit)
+      .exec();
+
+    res.status(200).json({
       success: true,
       count: readings.length,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
       data: readings,
     });
   } catch (error) {
@@ -163,5 +217,6 @@ const getReadingsByTransformer = async (req, res, next) => {
 
 module.exports = {
   ingestSensorData,
-  getReadingsByTransformer,
+  getLatestReading,
+  getReadingHistory,
 };

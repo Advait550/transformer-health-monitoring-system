@@ -9,14 +9,30 @@
 const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
 
 /**
- * Calculates health score and status based on sensor values.
+ * Calculates health score and status based on multi-sensor values.
  * 
- * @param {number} voltage - In Volts
- * @param {number} current - In Amperes
- * @param {number} temperature - In Celsius
+ * Primary sensors:
+ * @param {number} voltage - In Volts (nominal 230V)
+ * @param {number} current - In Amperes (nominal 50A)
+ * @param {number} temperature - In Celsius (nominal 50°C)
+ * Extended sensors:
+ * @param {number} powerFactor - 0.0 to 1.0 (nominal 0.95)
+ * @param {number} oilLevel - % (nominal 85%)
+ * @param {number} oilTemperature - In Celsius (nominal 55°C)
+ * @param {number} vibrations - mm/s (nominal 1.2 mm/s)
+ * @param {number} moisture - ppm (nominal 15 ppm)
+ * @param {number} dga - Dissolved Gas Analysis in ppm (nominal 20 ppm)
+ * 
  * @returns {object} { score, status, modelVersion }
  */
-const calculate = (voltage, current, temperature) => {
+const calculate = (voltage, current, temperature, options = {}) => {
+  const powerFactor = options.powerFactor !== undefined ? options.powerFactor : 0.95;
+  const oilLevel = options.oilLevel !== undefined ? options.oilLevel : 85;
+  const oilTemperature = options.oilTemperature !== undefined ? options.oilTemperature : 50;
+  const vibrations = options.vibrations !== undefined ? options.vibrations : 1.2;
+  const moisture = options.moisture !== undefined ? options.moisture : 15;
+  const dga = options.dga !== undefined ? options.dga : 20;
+
   const nominalVoltage = Number(process.env.NOMINAL_VOLTAGE) || 230;
   const voltageTolerance = Number(process.env.VOLTAGE_TOLERANCE) || 50;
 
@@ -36,8 +52,29 @@ const calculate = (voltage, current, temperature) => {
   const tempDevPct = (Math.abs(temperature - nominalTemp) / tempTolerance) * 100;
   const tempScore = 100 - clamp(tempDevPct, 0, 100);
 
-  // Weighted average: Voltage (40%), Current (30%), Temperature (30%)
-  const rawScore = (voltageScore * 0.40) + (currentScore * 0.30) + (tempScore * 0.30);
+  // Extended parameter sub-scores
+  const pfScore = clamp(powerFactor * 100, 0, 100);
+  const oilLevelScore = clamp(oilLevel, 0, 100);
+  const oilTempDevPct = (Math.abs(oilTemperature - 55) / 35) * 100;
+  const oilTempScore = 100 - clamp(oilTempDevPct, 0, 100);
+
+  const vibrationScore = 100 - clamp((vibrations / 5.0) * 100, 0, 100);
+  const moistureScore = 100 - clamp((moisture / 50.0) * 100, 0, 100);
+  const dgaScore = 100 - clamp((dga / 100.0) * 100, 0, 100);
+
+  // Weighted average across primary & extended sensors:
+  // Voltage 25%, Current 20%, Temp 15%, PowerFactor 10%, OilLevel 10%, OilTemp 10%, Vibrations 4%, Moisture 3%, DGA 3%
+  const rawScore =
+    voltageScore * 0.25 +
+    currentScore * 0.20 +
+    tempScore * 0.15 +
+    pfScore * 0.10 +
+    oilLevelScore * 0.10 +
+    oilTempScore * 0.10 +
+    vibrationScore * 0.04 +
+    moistureScore * 0.03 +
+    dgaScore * 0.03;
+
   const score = Math.round(rawScore);
 
   // Status rules per BRD v2.0:
@@ -56,7 +93,7 @@ const calculate = (voltage, current, temperature) => {
   return {
     score,
     status,
-    modelVersion: 'weighted-avg-v1',
+    modelVersion: 'multi-sensor-v2',
   };
 };
 

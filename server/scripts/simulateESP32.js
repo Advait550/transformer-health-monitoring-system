@@ -2,18 +2,24 @@ const http = require('http');
 
 /**
  * ESP32 Simulator Script for THMS
- * Sends simulated voltage, current, and temperature data to the backend API.
+ * Sends simulated multi-sensor telemetry to backend API.
  */
 
 const API_KEY = process.env.ESP32_API_KEY || 'esp32_sec_key_kolhapur_transformer_2026';
 const PORT = process.env.PORT || 5000;
 
-const sendReading = (transformerId, voltage, current, temperature) => {
+const sendReading = (transformerId, voltage, current, temperature, powerFactor = 0.95, oilLevel = 85, oilTemperature = 50, vibrations = 1.2, moisture = 15, dga = 20) => {
   const data = JSON.stringify({
     transformerId,
     voltage,
     current,
     temperature,
+    powerFactor,
+    oilLevel,
+    oilTemperature,
+    vibrations,
+    moisture,
+    dga,
     apiKey: API_KEY,
   });
 
@@ -52,21 +58,27 @@ if (args.length < 4) {
 ==================================================
 ESP32 Sensor Data Simulator
 ==================================================
-Usage: node simulateESP32.js <transformerId> <voltage> <current> <temperature>
+Usage: node simulateESP32.js <transformerId> <voltage> <current> <temperature> [powerFactor] [oilLevel] [oilTemp] [vibrations] [moisture] [dga]
 
 Example Healthy Reading:
-  node simulateESP32.js 66b7a123... 230 48 45
-
-Example Warning Reading:
-  node simulateESP32.js 66b7a123... 250 65 68
+  node simulateESP32.js 66b7a123... 230 48 45 0.96 88 52 1.1 12 18
 
 Example Critical Reading:
-  node simulateESP32.js 66b7a123... 275 80 85
-==================================================
-  `);
-  process.exit(0);
+  node simulateESP32.js 66b7a123... 278 78 88 0.75 45 85 4.8 48 95
+`);
+  process.exit(1);
 }
 
-const [txId, v, c, t] = args;
-console.log(`[ESP32 Sim] Transmitting reading to transformer ${txId}...`);
-sendReading(txId, parseFloat(v), parseFloat(c), parseFloat(t));
+const [transformerId, v, c, t, pf, ol, ot, vib, m, dga] = args;
+sendReading(
+  transformerId,
+  parseFloat(v),
+  parseFloat(c),
+  parseFloat(t),
+  pf !== undefined ? parseFloat(pf) : 0.95,
+  ol !== undefined ? parseFloat(ol) : 85,
+  ot !== undefined ? parseFloat(ot) : 50,
+  vib !== undefined ? parseFloat(vib) : 1.2,
+  m !== undefined ? parseFloat(m) : 15,
+  dga !== undefined ? parseFloat(dga) : 20
+);

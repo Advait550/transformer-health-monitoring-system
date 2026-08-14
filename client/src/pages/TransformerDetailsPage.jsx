@@ -25,6 +25,12 @@ import {
   Wrench,
   ShieldAlert,
   Clock,
+  Gauge,
+  Droplets,
+  Flame,
+  Waves,
+  CloudRain,
+  Wind,
 } from 'lucide-react';
 
 const TransformerDetailsPage = () => {
@@ -309,47 +315,134 @@ const TransformerDetailsPage = () => {
           </div>
         </div>
 
-        {/* Live Sensor Readings Grid */}
+        {/* Live Sensor Telemetry Grid (9 Compact Parameters - Unified Theme) */}
         <h2 className="text-xs font-extrabold text-slate-500 uppercase tracking-wider font-mono mb-3">
-          Live Sensor Telemetry
+          Live Multi-Sensor Telemetry (9 Real-Time Parameters)
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          <div className="white-panel p-5 rounded-2xl flex items-center justify-between shadow-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-8">
+          {/* 1. Grid Voltage */}
+          <div className="white-panel p-4 rounded-xl flex items-center justify-between shadow-sm border border-slate-200 hover:border-sky-300 transition-all">
             <div>
-              <span className="text-xs font-bold text-slate-500 block mb-1">Grid Voltage</span>
-              <span className="text-2xl font-extrabold text-[#0072CE] font-mono">
+              <span className="text-[11px] font-bold text-slate-500 block mb-0.5">Grid Voltage</span>
+              <span className="text-xl font-extrabold text-[#005691] font-mono">
                 {latestReading ? `${latestReading.voltage} V` : '--'}
               </span>
-              <span className="text-[11px] text-slate-400 block mt-1 font-mono">Nominal: 230V ± 50V</span>
+              <span className="text-[10px] text-slate-400 block mt-0.5 font-mono">Nominal: 230V ± 50V</span>
             </div>
-            <div className="p-3 rounded-xl bg-sky-50 text-[#0072CE] border border-sky-100">
-              <Zap className="w-6 h-6" />
+            <div className="p-2.5 rounded-lg bg-sky-50 text-[#005691] border border-sky-100">
+              <Zap className="w-5 h-5" />
             </div>
           </div>
 
-          <div className="white-panel p-5 rounded-2xl flex items-center justify-between shadow-sm">
+          {/* 2. Load Current */}
+          <div className="white-panel p-4 rounded-xl flex items-center justify-between shadow-sm border border-slate-200 hover:border-sky-300 transition-all">
             <div>
-              <span className="text-xs font-bold text-slate-500 block mb-1">Load Current</span>
-              <span className="text-2xl font-extrabold text-amber-600 font-mono">
+              <span className="text-[11px] font-bold text-slate-500 block mb-0.5">Load Current</span>
+              <span className="text-xl font-extrabold text-[#005691] font-mono">
                 {latestReading ? `${latestReading.current} A` : '--'}
               </span>
-              <span className="text-[11px] text-slate-400 block mt-1 font-mono">Nominal: 50A ± 30A</span>
+              <span className="text-[10px] text-slate-400 block mt-0.5 font-mono">Nominal: 50A ± 30A</span>
             </div>
-            <div className="p-3 rounded-xl bg-amber-50 text-amber-600 border border-amber-100">
-              <Activity className="w-6 h-6" />
+            <div className="p-2.5 rounded-lg bg-sky-50 text-[#005691] border border-sky-100">
+              <Activity className="w-5 h-5" />
             </div>
           </div>
 
-          <div className="white-panel p-5 rounded-2xl flex items-center justify-between shadow-sm">
+          {/* 3. Core Temperature */}
+          <div className="white-panel p-4 rounded-xl flex items-center justify-between shadow-sm border border-slate-200 hover:border-sky-300 transition-all">
             <div>
-              <span className="text-xs font-bold text-slate-500 block mb-1">Core Temperature</span>
-              <span className="text-2xl font-extrabold text-rose-600 font-mono">
+              <span className="text-[11px] font-bold text-slate-500 block mb-0.5">Core Temperature</span>
+              <span className="text-xl font-extrabold text-[#005691] font-mono">
                 {latestReading ? `${latestReading.temperature} °C` : '--'}
               </span>
-              <span className="text-[11px] text-slate-400 block mt-1 font-mono">Nominal: 50°C ± 40°C</span>
+              <span className="text-[10px] text-slate-400 block mt-0.5 font-mono">Nominal: 50°C ± 40°C</span>
             </div>
-            <div className="p-3 rounded-xl bg-rose-50 text-rose-600 border border-rose-100">
-              <Thermometer className="w-6 h-6" />
+            <div className="p-2.5 rounded-lg bg-sky-50 text-[#005691] border border-sky-100">
+              <Thermometer className="w-5 h-5" />
+            </div>
+          </div>
+
+          {/* 4. Power Factor */}
+          <div className="white-panel p-4 rounded-xl flex items-center justify-between shadow-sm border border-slate-200 hover:border-sky-300 transition-all">
+            <div>
+              <span className="text-[11px] font-bold text-slate-500 block mb-0.5">Power Factor (cos φ)</span>
+              <span className="text-xl font-extrabold text-[#005691] font-mono">
+                {latestReading ? (latestReading.powerFactor !== undefined ? latestReading.powerFactor : 0.95) : '--'}
+              </span>
+              <span className="text-[10px] text-slate-400 block mt-0.5 font-mono">Nominal: 0.90 – 1.00</span>
+            </div>
+            <div className="p-2.5 rounded-lg bg-sky-50 text-[#005691] border border-sky-100">
+              <Gauge className="w-5 h-5" />
+            </div>
+          </div>
+
+          {/* 5. Oil Level */}
+          <div className="white-panel p-4 rounded-xl flex items-center justify-between shadow-sm border border-slate-200 hover:border-sky-300 transition-all">
+            <div>
+              <span className="text-[11px] font-bold text-slate-500 block mb-0.5">Insulation Oil Level</span>
+              <span className="text-xl font-extrabold text-[#005691] font-mono">
+                {latestReading ? `${latestReading.oilLevel !== undefined ? latestReading.oilLevel : 85} %` : '--'}
+              </span>
+              <span className="text-[10px] text-slate-400 block mt-0.5 font-mono">Nominal: &gt; 70%</span>
+            </div>
+            <div className="p-2.5 rounded-lg bg-sky-50 text-[#005691] border border-sky-100">
+              <Droplets className="w-5 h-5" />
+            </div>
+          </div>
+
+          {/* 6. Oil Temperature */}
+          <div className="white-panel p-4 rounded-xl flex items-center justify-between shadow-sm border border-slate-200 hover:border-sky-300 transition-all">
+            <div>
+              <span className="text-[11px] font-bold text-slate-500 block mb-0.5">Oil Temperature</span>
+              <span className="text-xl font-extrabold text-[#005691] font-mono">
+                {latestReading ? `${latestReading.oilTemperature !== undefined ? latestReading.oilTemperature : 50} °C` : '--'}
+              </span>
+              <span className="text-[10px] text-slate-400 block mt-0.5 font-mono">Max Safe: 65°C</span>
+            </div>
+            <div className="p-2.5 rounded-lg bg-sky-50 text-[#005691] border border-sky-100">
+              <Flame className="w-5 h-5" />
+            </div>
+          </div>
+
+          {/* 7. Mechanical Vibrations */}
+          <div className="white-panel p-4 rounded-xl flex items-center justify-between shadow-sm border border-slate-200 hover:border-sky-300 transition-all">
+            <div>
+              <span className="text-[11px] font-bold text-slate-500 block mb-0.5">Mechanical Vibrations</span>
+              <span className="text-xl font-extrabold text-[#005691] font-mono">
+                {latestReading ? `${latestReading.vibrations !== undefined ? latestReading.vibrations : 1.2} mm/s` : '--'}
+              </span>
+              <span className="text-[10px] text-slate-400 block mt-0.5 font-mono">Safe: &lt; 2.5 mm/s</span>
+            </div>
+            <div className="p-2.5 rounded-lg bg-sky-50 text-[#005691] border border-sky-100">
+              <Waves className="w-5 h-5" />
+            </div>
+          </div>
+
+          {/* 8. Oil Moisture Level */}
+          <div className="white-panel p-4 rounded-xl flex items-center justify-between shadow-sm border border-slate-200 hover:border-sky-300 transition-all">
+            <div>
+              <span className="text-[11px] font-bold text-slate-500 block mb-0.5">Oil Moisture Content</span>
+              <span className="text-xl font-extrabold text-[#005691] font-mono">
+                {latestReading ? `${latestReading.moisture !== undefined ? latestReading.moisture : 15} ppm` : '--'}
+              </span>
+              <span className="text-[10px] text-slate-400 block mt-0.5 font-mono">Safe Limit: &lt; 30 ppm</span>
+            </div>
+            <div className="p-2.5 rounded-lg bg-sky-50 text-[#005691] border border-sky-100">
+              <CloudRain className="w-5 h-5" />
+            </div>
+          </div>
+
+          {/* 9. Dissolved Gas Analysis (DGA) */}
+          <div className="white-panel p-4 rounded-xl flex items-center justify-between shadow-sm border border-slate-200 hover:border-sky-300 transition-all">
+            <div>
+              <span className="text-[11px] font-bold text-slate-500 block mb-0.5">Dissolved Gas (DGA)</span>
+              <span className="text-xl font-extrabold text-[#005691] font-mono">
+                {latestReading ? `${latestReading.dga !== undefined ? latestReading.dga : 20} ppm` : '--'}
+              </span>
+              <span className="text-[10px] text-slate-400 block mt-0.5 font-mono">Key Gases (H₂, CH₄, C₂H₂)</span>
+            </div>
+            <div className="p-2.5 rounded-lg bg-sky-50 text-[#005691] border border-sky-100">
+              <Wind className="w-5 h-5" />
             </div>
           </div>
         </div>
@@ -424,21 +517,33 @@ const TransformerDetailsPage = () => {
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-100 text-slate-600 uppercase font-mono border-b border-slate-200">
                   <tr>
-                    <th className="px-4 py-3">Timestamp</th>
-                    <th className="px-4 py-3">Voltage</th>
-                    <th className="px-4 py-3">Current</th>
-                    <th className="px-4 py-3">Temperature</th>
+                    <th className="px-3 py-3">Timestamp</th>
+                    <th className="px-3 py-3">Voltage</th>
+                    <th className="px-3 py-3">Current</th>
+                    <th className="px-3 py-3">Core Temp</th>
+                    <th className="px-3 py-3">Power Factor</th>
+                    <th className="px-3 py-3">Oil Level</th>
+                    <th className="px-3 py-3">Oil Temp</th>
+                    <th className="px-3 py-3">Vibrations</th>
+                    <th className="px-3 py-3">Moisture</th>
+                    <th className="px-3 py-3">DGA</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 font-mono text-slate-800">
+                <tbody className="divide-y divide-slate-100 font-mono text-slate-800 text-[11px]">
                   {readings.map((r) => (
-                    <tr key={r._id} className="hover:bg-slate-50">
-                      <td className="px-4 py-3 text-slate-500 font-sans">
+                    <tr key={r._id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-3 py-3 text-slate-500 font-sans whitespace-nowrap">
                         {new Date(r.timestamp).toLocaleString()}
                       </td>
-                      <td className="px-4 py-3 text-[#0072CE] font-bold">{r.voltage} V</td>
-                      <td className="px-4 py-3 text-amber-600 font-bold">{r.current} A</td>
-                      <td className="px-4 py-3 text-rose-600 font-bold">{r.temperature} °C</td>
+                      <td className="px-3 py-3 text-[#005691] font-bold whitespace-nowrap">{r.voltage} V</td>
+                      <td className="px-3 py-3 text-[#005691] font-bold whitespace-nowrap">{r.current} A</td>
+                      <td className="px-3 py-3 text-[#005691] font-bold whitespace-nowrap">{r.temperature} °C</td>
+                      <td className="px-3 py-3 text-[#005691] font-bold whitespace-nowrap">{r.powerFactor !== undefined ? r.powerFactor : 0.95}</td>
+                      <td className="px-3 py-3 text-[#005691] font-bold whitespace-nowrap">{r.oilLevel !== undefined ? r.oilLevel : 85} %</td>
+                      <td className="px-3 py-3 text-[#005691] font-bold whitespace-nowrap">{r.oilTemperature !== undefined ? r.oilTemperature : 50} °C</td>
+                      <td className="px-3 py-3 text-[#005691] font-bold whitespace-nowrap">{r.vibrations !== undefined ? r.vibrations : 1.2} mm/s</td>
+                      <td className="px-3 py-3 text-[#005691] font-bold whitespace-nowrap">{r.moisture !== undefined ? r.moisture : 15} ppm</td>
+                      <td className="px-3 py-3 text-[#005691] font-bold whitespace-nowrap">{r.dga !== undefined ? r.dga : 20} ppm</td>
                     </tr>
                   ))}
                 </tbody>
