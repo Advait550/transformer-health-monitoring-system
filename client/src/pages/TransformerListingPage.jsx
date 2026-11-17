@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Navbar from '../components/layout/Navbar';
 import TransformerCard from '../components/transformer/TransformerCard';
 import AddTransformerModal from '../components/transformer/AddTransformerModal';
@@ -18,14 +18,11 @@ const TransformerListingPage = () => {
   const [sortBy, setSortBy] = useState('lowest-score'); // lowest health score first
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
+  // Initial Data Fetch
   const fetchTransformersData = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await getTransformers({
-        search: searchQuery,
-        status: statusFilter === 'All' ? undefined : statusFilter,
-        sort: sortBy,
-      });
+      const res = await getTransformers();
 
       if (res.success) {
         setTransformers(res.data);
@@ -35,7 +32,7 @@ const TransformerListingPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, statusFilter, sortBy]);
+  }, []);
 
   useEffect(() => {
     fetchTransformersData();
@@ -66,14 +63,6 @@ const TransformerListingPage = () => {
             timestamp: data.timestamp,
           },
         };
-
-        if (sortBy === 'lowest-score') {
-          updatedList.sort((a, b) => {
-            const scoreA = a.healthScore !== null ? a.healthScore : 999;
-            const scoreB = b.healthScore !== null ? b.healthScore : 999;
-            return scoreA - scoreB;
-          });
-        }
 
         return updatedList;
       });
@@ -106,7 +95,54 @@ const TransformerListingPage = () => {
       socket.off('transformer-status-change', handleStatusChange);
       socket.off('transformer-stale', handleStale);
     };
-  }, [socket, sortBy]);
+  }, [socket]);
+
+  // Instant Client-Side Filter, Search & Sort
+  const filteredTransformers = useMemo(() => {
+    let result = [...transformers];
+
+    // 1. Status Filter (Check status or healthScore threshold)
+    if (statusFilter !== 'All') {
+      result = result.filter((tx) => {
+        if (statusFilter === 'Critical') {
+          return tx.status === 'Critical' || (tx.healthScore !== null && tx.healthScore < 60);
+        }
+        if (statusFilter === 'Warning') {
+          return tx.status === 'Warning' || (tx.healthScore !== null && tx.healthScore >= 60 && tx.healthScore < 80);
+        }
+        if (statusFilter === 'Healthy') {
+          return tx.status === 'Healthy' || (tx.healthScore !== null && tx.healthScore >= 80);
+        }
+        return true;
+      });
+    }
+
+    // 2. Search Query (Name, Location, Capacity)
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      result = result.filter((tx) => {
+        const matchName = tx.name ? tx.name.toLowerCase().includes(q) : false;
+        const matchLocation = tx.location ? tx.location.toLowerCase().includes(q) : false;
+        const matchCapacity = tx.capacity ? tx.capacity.toString().includes(q) : false;
+        return matchName || matchLocation || matchCapacity;
+      });
+    }
+
+    // 3. Sorting
+    if (sortBy === 'lowest-score') {
+      result.sort((a, b) => {
+        const scoreA = a.healthScore !== null ? a.healthScore : 999;
+        const scoreB = b.healthScore !== null ? b.healthScore : 999;
+        return scoreA - scoreB;
+      });
+    } else if (sortBy === 'highest-score') {
+      result.sort((a, b) => (b.healthScore || 0) - (a.healthScore || 0));
+    } else if (sortBy === 'name') {
+      result.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    }
+
+    return result;
+  }, [transformers, searchQuery, statusFilter, sortBy]);
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-16">
@@ -203,14 +239,14 @@ const TransformerListingPage = () => {
               <div key={i} className="h-64 rounded-2xl white-card border border-slate-200 animate-pulse bg-white" />
             ))}
           </div>
-        ) : transformers.length === 0 ? (
+        ) : filteredTransformers.length === 0 ? (
           <div className="white-panel p-12 text-center rounded-2xl">
-            <p className="text-base font-bold text-slate-700">No active transformers found</p>
-            <p className="text-xs text-slate-500 mt-1">Try clearing search filters or add a new transformer.</p>
+            <p className="text-base font-bold text-slate-700">No matching transformers found</p>
+            <p className="text-xs text-slate-500 mt-1">Try clearing your search query or switching status filters.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {transformers.map((tx) => (
+            {filteredTransformers.map((tx) => (
               <TransformerCard key={tx._id} transformer={tx} />
             ))}
           </div>
